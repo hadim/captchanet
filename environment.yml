@@ -2,12 +2,15 @@ channels:
     - conda-forge
 
 dependencies:
+    - pip
     - python>=3.6
     - numpy
     - scipy
     - matplotlib
     - pandas
     - pytables
+    - pillow
+    - requests
     - jupyter
     - jupyterlab
     - notebook
