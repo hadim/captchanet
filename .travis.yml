@@ -15,7 +15,6 @@ matrix:
             - g++-4.9
             - libstdc++6
       env: PYTHON_VERSION="3.6"
-
     - os: linux
       addons:
         apt:
