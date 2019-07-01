@@ -32,6 +32,10 @@ Then install captchanet:
 
 `pip install captchanet`
 
+## Usage
+
+As a starting point you can browser [the notebooks](./notebooks) and adapt it to our needs.
+
 ## License
 
 Under BSD license. See [LICENSE](LICENSE).
