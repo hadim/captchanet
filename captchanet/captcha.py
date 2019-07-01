@@ -24,16 +24,19 @@ def rotate_points(xy, radians, origin=(0, 0)):
 
 class CaptchaGenerator:
 
-  def __init__(self, image_size, font_size=60, font_name=None, alphabet=None):
+  def __init__(self, image_size, font_size=60, font_path=None, font_name=None, alphabet=None):
 
     self.image_size = image_size
     self.font_size = font_size
 
-    if not font_name:
-      self.font_name = font_manager.fontManager.defaultFamily['ttf']
+    if font_path:
+      self.font_path = str(font_path)
     else:
-      self.font_name = font_name
-    self.font_path = font_manager.fontManager.findfont(self.font_name)
+      if not font_name:
+        self.font_name = font_manager.fontManager.defaultFamily['ttf']
+      else:
+        self.font_name = font_name
+      self.font_path = font_manager.fontManager.findfont(self.font_name)
     self.font_type = self._make_font_type(font_size)
 
     if not alphabet:
@@ -66,25 +69,25 @@ class CaptchaGenerator:
 
     word_width = np.sum([im.size[0] for im in patches])
 
-    average = int(word_width / len(word))
-    rand = int(0.25 * average)
-    offset = int((image_width - word_width) / 2)
+    # average = int(word_width / len(word))
+    #rand = int(0.05 * average)
+    offset = int((image_width - word_width + 5 * len(patches)) / 2)
 
     for patch in patches:
       w, h = patch.size
       mask = patch.convert('L').point(self.table)
-      image.paste(patch, (offset, int((image_height - h) / 2)), mask)
-      offset = offset + w + np.random.randint(-rand, 0)
+      image.paste(patch, (offset, int((image_height - h) / 2) - 10), mask)
+      offset = offset + w - 5  # + np.random.randint(-rand, 0)
 
     if word_width > image_width:
       image = image.resize((image_width, image_height))
 
-    color = (117, 117, 117)
-    self._create_noise_dots(image, color=color, width_min=1, width_max=4, n_min=80, n_max=120)
+    color = (112, 112, 112)
+    self._create_noise_dots(image, color=color, n_min=450, n_max=500)
     self._create_noise_curves(image, color=color, width_min=1, width_max=3, n_min=5, n_max=9)
 
     if watermark:
-      self._add_watermark(image, watermark, font_color=(140, 140, 140), font_size=12)
+      self._add_watermark(image, watermark, font_color=(112, 112, 112), font_size=13)
 
     return word, image
 
@@ -95,18 +98,18 @@ class CaptchaGenerator:
     w, h = draw.textsize(character, font=self.font_type)
 
     # Write and draw
-    dx = np.random.randint(0, 4)
-    dy = np.random.randint(0, 6)
+    dx = np.random.randint(0, 2)
+    dy = np.random.randint(0, 2)
     patch = Image.new('RGBA', (w + dx, h + dy), color=background)
     Draw(patch).text((dx, dy), character, font=self.font_type, fill=font_color)
 
     # Rotate
     patch = patch.crop(patch.getbbox())
-    patch = patch.rotate(np.random.uniform(-30, 30), Image.BILINEAR, expand=1)
+    #patch = patch.rotate(np.random.uniform(-5, 5), Image.BILINEAR, expand=1)
 
     # Warp
-    dx = w * np.random.uniform(0.1, 0.3)
-    dy = h * np.random.uniform(0.2, 0.3)
+    dx = w * np.random.uniform(0, 0.1)
+    dy = h * np.random.uniform(0, 0.1)
     x1 = int(np.random.uniform(-dx, dx))
     y1 = int(np.random.uniform(-dy, dy))
     x2 = int(np.random.uniform(-dx, dx))
@@ -153,15 +156,22 @@ class CaptchaGenerator:
       draw.line(points, width=width, fill=color)
     return image
 
-  def _create_noise_dots(self, image, color, width_min=1, width_max=4, n_min=80, n_max=120):
+  def _create_noise_dots(self, image, color, n_min=80, n_max=120):
     draw = Draw(image)
     w, h = image.size
     n = np.random.randint(n_min, n_max)
     for _ in range(n):
       x1 = np.random.randint(0, w)
       y1 = np.random.randint(0, h)
-      width = np.random.randint(width_min, width_max)
-      draw.line(((x1, y1), (x1 - 1, y1 - 1)), fill=color, width=width)
+      draw.point((x1, y1), fill=color)
+
+      if np.random.random() < 0.5:
+        draw.point((x1 - 1, y1), fill=color)
+      if np.random.random() < 0.5:
+        draw.point((x1 - 1, y1 - 1), fill=color)
+      if np.random.random() < 0.5:
+        draw.point((x1, y1 - 1), fill=color)
+
     return image
 
   def _add_watermark(self, image, text, font_color=(140, 140, 140), font_size=12):
@@ -169,8 +179,8 @@ class CaptchaGenerator:
     draw = Draw(image)
     w, h = draw.textsize(text, font=font_type)
 
-    dx = (image.width - w) / 2
-    dy = image.height - h - 5
+    dx = (image.width - w) - 2
+    dy = image.height - h - 2
     draw.text((dx, dy), text, font=font_type, fill=font_color)
 
     return image
