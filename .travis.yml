@@ -1,0 +1,37 @@
+language: python
+
+matrix:
+  fast_finish: true
+  include:
+    - language: python
+      os: linux
+      env:
+        - PYTHON_VERSION="3.6"
+    - language: python
+      os: linux
+      env:
+        - PYTHON_VERSION="3.7"
+
+install:
+  - sudo apt-get update
+  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - echo ". $HOME/miniconda/etc/profile.d/conda.sh" >> $HOME/.bashrc
+  - source $HOME/.bashrc
+  - hash -r
+  - conda config --set always_yes yes --set changeps1 no
+  - conda config --add channels conda-forge
+  - conda update -q conda
+  - conda info -a
+  - conda create -n conda_env python=$PYTHON_VERSION
+  - conda activate conda_env
+  - conda env update -f "environment.yml"
+  - pip install --no-deps -U tensorflow-datasets tensorflow_metadata tensorboard tensorflow-estimator
+  - pip install --no-deps -U tensorflow-gpu==2.0.0-beta1
+  - pip install --no-deps -U https://github.com/keras-team/keras-tuner/archive/fe5ed591bf54fc3db033814ab43193f6e8999ee5.zip
+
+script:
+  - conda activate conda_env
+  - pylint captchanet/
+  - python setup.py install
+  - pytest -v captchanet/

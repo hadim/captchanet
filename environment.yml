@@ -1,0 +1,48 @@
+channels:
+    - conda-forge
+
+dependencies:
+    - python>=3.6
+    - numpy
+    - scipy
+    - matplotlib
+    - pandas
+    - pytables
+    - jupyter
+    - jupyterlab
+    - notebook
+    - ipywidgets
+    - tqdm
+    - nodejs
+    - pytest
+    - flake8
+    - pylint
+    - autopep8
+    # Tensorflow dependencies
+    - protobuf
+    - absl-py
+    - gast
+    - astor
+    - termcolor
+    - h5py
+    - wrapt
+    - keras-preprocessing
+    - keras-applications
+    - google-pasta
+    # Tensorboard dependencies
+    - werkzeug
+    - markdown
+    - grpcio
+    # Tensorflow dataset dependencies
+    - psutil
+    - promise
+    - dill
+    # Keras tuner deps
+    - terminaltables
+    - tabulate
+    #- pip:
+    # Install TF deps not available on Conda.
+    #- pip install --no-deps -U tensorflow-datasets tensorflow_metadata tensorboard tensorflow-estimator
+    # Install TF (from nightly or not).
+    #- pip install --no-deps -U tensorflow-gpu==2.0.0-beta1
+    #- pip install --no-deps -U https://github.com/keras-team/keras-tuner/archive/fe5ed591bf54fc3db033814ab43193f6e8999ee5.zip
