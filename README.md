@@ -11,7 +11,7 @@ Features:
 - After training, model is exported as a Keras HDF5 model (soon it will be exported as a Saved Model file).
 - Model can be loaded in an environment containing only Tensorflow. Useful for inference (no need to install the `captachanet` library).
 
-PUT IMAGES
+![screenshot](screenshot.png "Screenshot")
 
 ## Install
 
