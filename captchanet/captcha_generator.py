@@ -1,7 +1,9 @@
 import string
+import pkg_resources
 
 from matplotlib import font_manager
 import numpy as np
+from skimage.transform import swirl
 
 from PIL import Image
 from PIL.ImageDraw import Draw
@@ -34,9 +36,11 @@ class CaptchaGenerator:
     else:
       if not font_name:
         self.font_name = font_manager.fontManager.defaultFamily['ttf']
+        self.font_path = font_manager.fontManager.findfont(self.font_name)
       else:
         self.font_name = font_name
-      self.font_path = font_manager.fontManager.findfont(self.font_name)
+        self.font_path = pkg_resources.resource_filename('captchanet', f'fonts/{self.font_name}')
+
     self.font_type = self._make_font_type(font_size)
 
     if not alphabet:
@@ -84,12 +88,15 @@ class CaptchaGenerator:
     if word_width > image_width:
       image = image.resize((image_width, image_height))
 
-    color = (112, 112, 112)
-    self._create_noise_dots(image, color=color, n_min=450, n_max=500)
-    self._create_noise_curves(image, color=color, width_min=1, width_max=3, n_min=5, n_max=9)
+    # Swirl image before adding noise and watermark.
+
+
+    #color = (112, 112, 112)
+    #self._create_noise_dots(image, color=color, n_min=450, n_max=500)
+    #self._create_noise_curves(image, color=color, width_min=1, width_max=3, n_min=5, n_max=9)
 
     if watermark:
-      self._add_watermark(image, watermark, font_color=(112, 112, 112), font_size=13)
+      pass#self._add_watermark(image, watermark, font_color=(112, 112, 112), font_size=13)
 
     return image
 
@@ -104,10 +111,6 @@ class CaptchaGenerator:
     dy = np.random.randint(0, 2)
     patch = Image.new('RGBA', (w + dx, h + dy), color=background)
     Draw(patch).text((dx, dy), character, font=self.font_type, fill=font_color)
-
-    # Rotate
-    patch = patch.crop(patch.getbbox())
-    #patch = patch.rotate(np.random.uniform(-5, 5), Image.BILINEAR, expand=1)
 
     # Warp
     dx = w * np.random.uniform(0, 0.1)

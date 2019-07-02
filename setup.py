@@ -10,6 +10,7 @@ setup(name='captchanet',
       description='A simple but yet efficient neural networks to solve captcha images.',
       long_description_content_type='text/markdown',
       packages=find_packages(),
+      include_package_data=True,
       classifiers=[
               'Development Status :: 5 - Production/Stable',
               'Intended Audience :: Developers',

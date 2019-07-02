@@ -10,6 +10,7 @@ dependencies:
     - pandas
     - pytables
     - pillow
+    - scikit-image
     - requests
     - jupyter
     - jupyterlab

@@ -1,6 +1,8 @@
 include LICENSE
 include README.md
 include *.py
+include captchanet/fonts/*.otf
+include captchanet/fonts/*.ttf
 
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
