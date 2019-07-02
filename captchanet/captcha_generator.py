@@ -52,9 +52,11 @@ class CaptchaGenerator:
   def __call__(self, n_min=6, n_max=10, watermark=None, font_color=(140, 140, 140), background=(255, 255, 255, 0)):
     """Generate a captcha image for a random word of size `n`.
     """
-
     n = np.random.randint(n_min, n_max + 1)
     word = self.generate_word(n)
+    return word, self.generate_image_from_word(word, watermark, font_color, background)
+
+  def generate_image_from_word(self, word, watermark=None, font_color=(140, 140, 140), background=(255, 255, 255, 0)):
 
     image_width = self.image_size[0]
     image_height = self.image_size[1]
@@ -65,7 +67,7 @@ class CaptchaGenerator:
     # Create patch for all letters.
     patches = []
     for letter in word:
-      patches.append(self._draw_character(letter, draw))
+      patches.append(self._draw_character(letter, draw, font_color, background))
 
     word_width = np.sum([im.size[0] for im in patches])
 
@@ -89,7 +91,7 @@ class CaptchaGenerator:
     if watermark:
       self._add_watermark(image, watermark, font_color=(112, 112, 112), font_size=13)
 
-    return word, image
+    return image
 
   def _make_font_type(self, font_size):
     return truetype(self.font_path, font_size)

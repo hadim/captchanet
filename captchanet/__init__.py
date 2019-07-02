@@ -1,6 +1,6 @@
 from ._version import __version__
 
-from .captcha import CaptchaGenerator
+from .captcha_generator import CaptchaGenerator
 
 from .data import PADDING_VALUE
 from .data import bytes_feature
