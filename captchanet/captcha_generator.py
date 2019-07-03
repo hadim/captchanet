@@ -65,12 +65,17 @@ def elastic_transformations(image, alpha=2000, sigma=50, interpolation_order=1):
   return transformed_image
 
 
+def make_font_type(font_path, font_size):
+  return truetype(font_path, font_size)
+
+
 class CaptchaGenerator:
 
-  def __init__(self, image_size, font_size=60, font_path=None, font_name=None, alphabet=None):
+  def __init__(self, image_size, font_size=60, watermark_font_size=13, font_path=None, font_name=None, alphabet=None):
 
     self.image_size = image_size
     self.font_size = font_size
+    self.watermark_font_size = watermark_font_size
 
     if font_path:
       self.font_path = str(font_path)
@@ -81,8 +86,6 @@ class CaptchaGenerator:
       else:
         self.font_name = font_name
         self.font_path = pkg_resources.resource_filename('captchanet', f'fonts/{self.font_name}')
-
-    self.font_type = self._make_font_type(font_size)
 
     if not alphabet:
       self.alphabet = list(string.ascii_letters + string.digits)
@@ -103,29 +106,21 @@ class CaptchaGenerator:
 
   def generate_image_from_word(self, word, watermark=None, font_color=(140, 140, 140), background=(255, 255, 255, 0)):
 
+    font_type = make_font_type(self.font_path, self.font_size)
+    
     image_width = self.image_size[0]
     image_height = self.image_size[1]
 
     image = Image.new('RGBA', self.image_size, background)
     draw = Draw(image)
 
-    # Create patch for all letters.
-    patches = []
-    for letter in word:
-      patches.append(self._draw_character(letter, draw, font_color, background))
-
-    word_width = np.sum([im.size[0] for im in patches])
+    # Draw the word.
+    word_width, word_height = draw.textsize(word, font=font_type)
     width_offset = int((image_width - word_width) / 2)
-
-    for patch in patches:
-      patch_width, patch_height = patch.size
-      mask = patch.convert('L').point(self.table)
-      image.paste(patch, (width_offset, int((image_height - patch_height) / 2)), mask)
-      width_offset = width_offset + patch_width
-
-    if word_width > image_width:
-      image = image.resize((image_width, image_height))
-
+    height_offset = int((image_height - word_height) / 2)
+    draw.text((width_offset, height_offset), word, font=font_type, fill=font_color)
+    
+    # Do random distortion.
     image = np.asarray(image)
     image = elastic_transformations(image, alpha=1200, sigma=40)
     image = Image.fromarray(image)
@@ -135,19 +130,16 @@ class CaptchaGenerator:
     self._create_noise_curves(image, color=color, width_min=1, width_max=3, n_min=8, n_max=12)
 
     if watermark:
-      self._add_watermark(image, watermark, font_color=(112, 112, 112), font_size=13)
+      self._add_watermark(image, watermark, font_color=(112, 112, 112))
 
     image = image.convert('RGB')
     return image
 
-  def _make_font_type(self, font_size):
-    return truetype(self.font_path, font_size)
+  def _draw_character(self, character, draw, font_type, font_color=(140, 140, 140), background=(255, 255, 255, 0)):
 
-  def _draw_character(self, character, draw, font_color=(140, 140, 140), background=(255, 255, 255, 0)):
-
-    patch_width, patch_height = draw.textsize(character, font=self.font_type)
+    patch_width, patch_height = draw.textsize(character, font=font_type)
     patch = Image.new('RGBA', (patch_width, patch_height), color=background)
-    Draw(patch).text((0, 0), character, font=self.font_type, fill=font_color)
+    Draw(patch).text((0, 0), character, font=font_type, fill=font_color)
     return patch
 
   def generate_word(self, n):
@@ -202,13 +194,13 @@ class CaptchaGenerator:
 
     return image
 
-  def _add_watermark(self, image, text, font_color=(140, 140, 140), font_size=12):
-    font_type = self._make_font_type(font_size)
+  def _add_watermark(self, image, text, font_color=(140, 140, 140)):
+    watermark_font_type = make_font_type(self.font_path, self.watermark_font_size)
     draw = Draw(image)
-    w, h = draw.textsize(text, font=font_type)
+    w, h = draw.textsize(text, font=watermark_font_type)
 
     dx = (image.width - w) - 4.5
     dy = image.height - h - 0
-    draw.text((dx, dy), text, font=font_type, fill=font_color)
+    draw.text((dx, dy), text, font=watermark_font_type, fill=font_color)
 
     return image

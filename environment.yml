@@ -17,6 +17,7 @@ dependencies:
     - notebook
     - ipywidgets
     - tqdm
+    - joblib
     - nodejs
     - pytest
     - flake8

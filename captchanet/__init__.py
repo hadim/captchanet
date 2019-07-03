@@ -1,6 +1,7 @@
 from ._version import __version__
 
 from .captcha_generator import CaptchaGenerator
+from .captcha_generator import make_font_type
 
 from .data import PADDING_VALUE
 from .data import bytes_feature
@@ -17,3 +18,5 @@ from .model import build_model
 from .callbacks import LRTensorBoard
 
 from .tqdm_callback import TQDMCallback
+
+from . import utils
