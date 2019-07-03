@@ -107,7 +107,7 @@ class CaptchaGenerator:
   def generate_image_from_word(self, word, watermark=None, font_color=(140, 140, 140), background=(255, 255, 255, 0)):
 
     font_type = make_font_type(self.font_path, self.font_size)
-    
+
     image_width = self.image_size[0]
     image_height = self.image_size[1]
 
@@ -119,7 +119,7 @@ class CaptchaGenerator:
     width_offset = int((image_width - word_width) / 2)
     height_offset = int((image_height - word_height) / 2)
     draw.text((width_offset, height_offset), word, font=font_type, fill=font_color)
-    
+
     # Do random distortion.
     image = np.asarray(image)
     image = elastic_transformations(image, alpha=1200, sigma=40)
