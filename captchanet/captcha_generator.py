@@ -3,7 +3,7 @@ import pkg_resources
 
 from matplotlib import font_manager
 import numpy as np
-from skimage.transform import swirl
+from scipy import ndimage
 
 from PIL import Image
 from PIL.ImageDraw import Draw
@@ -22,6 +22,47 @@ def rotate_points(xy, radians, origin=(0, 0)):
   qx = offset_x + cos_rad * adjusted_x + sin_rad * adjusted_y
   qy = offset_y + -sin_rad * adjusted_x + cos_rad * adjusted_y
   return np.array([qx, qy])
+
+
+def elastic_transformations(image, alpha=2000, sigma=50, interpolation_order=1):
+  """Returns a function to elastically transform multiple images.
+
+  Good starting values:
+    - alpha: 2000
+    - sigma: between 40 and 60
+  """
+  # Take measurements
+  image_shape = image.shape[:2]
+  # Make random fields
+  dx = np.random.uniform(-1, 1, image_shape) * alpha
+  dy = np.random.uniform(-1, 1, image_shape) * alpha
+
+  # Smooth dx and dy
+  sdx = ndimage.filters.gaussian_filter(dx, sigma=sigma, mode='reflect')
+  sdy = ndimage.filters.gaussian_filter(dy, sigma=sigma, mode='reflect')
+
+  # Make meshgrid
+  x, y = np.meshgrid(np.arange(image_shape[1]), np.arange(image_shape[0]))
+
+  # Distort meshgrid indices
+  distorted_indices = (y + sdy).reshape(-1, 1), (x + sdx).reshape(-1, 1)
+
+  # Map cooordinates from image to distorted index set
+  def map_fn(a):
+    return ndimage.interpolation.map_coordinates(a, distorted_indices,
+                                                 mode='reflect',
+                                                 order=interpolation_order)
+
+  if image.ndim == 2:
+    transformed_image = map_fn(image)
+    transformed_image = transformed_image.reshape(image_shape)
+  elif image.ndim == 3:
+    transformed_image = [map_fn(im).reshape(image_shape) for im in np.moveaxis(image, -1, 0)]
+    transformed_image = np.asarray(transformed_image)
+    transformed_image = np.moveaxis(transformed_image, 0, -1)
+  else:
+    raise ValueError(f"Wrong image dimension: {image.shape}")
+  return transformed_image
 
 
 class CaptchaGenerator:
@@ -74,57 +115,39 @@ class CaptchaGenerator:
       patches.append(self._draw_character(letter, draw, font_color, background))
 
     word_width = np.sum([im.size[0] for im in patches])
-
-    # average = int(word_width / len(word))
-    #rand = int(0.05 * average)
-    offset = int((image_width - word_width + 5 * len(patches)) / 2)
+    width_offset = int((image_width - word_width) / 2)
 
     for patch in patches:
-      w, h = patch.size
+      patch_width, patch_height = patch.size
       mask = patch.convert('L').point(self.table)
-      image.paste(patch, (offset, int((image_height - h) / 2) - 10), mask)
-      offset = offset + w - 5  # + np.random.randint(-rand, 0)
+      image.paste(patch, (width_offset, int((image_height - patch_height) / 2)), mask)
+      width_offset = width_offset + patch_width
 
     if word_width > image_width:
       image = image.resize((image_width, image_height))
 
-    # Swirl image before adding noise and watermark.
+    image = np.asarray(image)
+    image = elastic_transformations(image, alpha=1200, sigma=40)
+    image = Image.fromarray(image)
 
-
-    #color = (112, 112, 112)
-    #self._create_noise_dots(image, color=color, n_min=450, n_max=500)
-    #self._create_noise_curves(image, color=color, width_min=1, width_max=3, n_min=5, n_max=9)
+    color = (112, 112, 112)
+    self._create_noise_dots(image, color=color, n_min=450, n_max=500)
+    self._create_noise_curves(image, color=color, width_min=1, width_max=3, n_min=8, n_max=12)
 
     if watermark:
-      pass#self._add_watermark(image, watermark, font_color=(112, 112, 112), font_size=13)
+      self._add_watermark(image, watermark, font_color=(112, 112, 112), font_size=13)
 
+    image = image.convert('RGB')
     return image
 
   def _make_font_type(self, font_size):
     return truetype(self.font_path, font_size)
 
   def _draw_character(self, character, draw, font_color=(140, 140, 140), background=(255, 255, 255, 0)):
-    w, h = draw.textsize(character, font=self.font_type)
 
-    # Write and draw
-    dx = np.random.randint(0, 2)
-    dy = np.random.randint(0, 2)
-    patch = Image.new('RGBA', (w + dx, h + dy), color=background)
-    Draw(patch).text((dx, dy), character, font=self.font_type, fill=font_color)
-
-    # Warp
-    dx = w * np.random.uniform(0, 0.1)
-    dy = h * np.random.uniform(0, 0.1)
-    x1 = int(np.random.uniform(-dx, dx))
-    y1 = int(np.random.uniform(-dy, dy))
-    x2 = int(np.random.uniform(-dx, dx))
-    y2 = int(np.random.uniform(-dy, dy))
-    w2 = w + abs(x1) + abs(x2)
-    h2 = h + abs(y1) + abs(y2)
-    data = (x1, y1, -x1, h2 - y2, w2 + x2, h2 + y2, w2 - x2, -y1)
-    patch = patch.resize((w2, h2))
-    patch = patch.transform((w, h), Image.QUAD, data)
-
+    patch_width, patch_height = draw.textsize(character, font=self.font_type)
+    patch = Image.new('RGBA', (patch_width, patch_height), color=background)
+    Draw(patch).text((0, 0), character, font=self.font_type, fill=font_color)
     return patch
 
   def generate_word(self, n):
@@ -184,8 +207,8 @@ class CaptchaGenerator:
     draw = Draw(image)
     w, h = draw.textsize(text, font=font_type)
 
-    dx = (image.width - w) - 2
-    dy = image.height - h - 2
+    dx = (image.width - w) - 4.5
+    dy = image.height - h - 0
     draw.text((dx, dy), text, font=font_type, fill=font_color)
 
     return image
