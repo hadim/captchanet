@@ -1,0 +1,15 @@
+version: '3'
+services:
+
+  tf-serving:
+    container_name: tf-serving
+    image: tensorflow/serving:nightly
+    #runtime: nvidia
+    ports:
+      - "8500:8500"
+      - "8501:8501"
+    volumes:
+      - ./MNIST_data/model/:/models/MNIST
+    environment:
+      - MODEL_NAME=MNIST
+      - MODEL_BASE_PATH=/models
