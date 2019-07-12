@@ -1,0 +1,2 @@
+- The v4 model cannot run because of the change in the captchanet API (tokenizer is different).
+- Commit de98cd10351a92f3c79ecb33cba81392ed1f831a is the last one where v4 model will run.
