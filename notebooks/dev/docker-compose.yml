@@ -9,7 +9,7 @@ services:
       - "8500:8500"
       - "8501:8501"
     volumes:
-      - ./MNIST_data/model/:/models/MNIST
+      - /home/hadim/Drive/Data/Neural_Network/captchanet/saved_model/:/models/captchanet
     environment:
-      - MODEL_NAME=MNIST
+      - MODEL_NAME=captchanet
       - MODEL_BASE_PATH=/models
