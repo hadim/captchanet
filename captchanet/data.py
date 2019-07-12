@@ -55,7 +55,7 @@ def encode_data(image, word, tokenizer):
   return tf.train.Example(features=tf.train.Features(feature=feature))
 
 
-def decode_data(tokenizer, max_len_word, input_as_dict=False):
+def decode_data(tokenizer, max_len_word, image_size=None, input_as_dict=False):
   def _decode(example):
     feature_description = {}
     feature_description['width'] = tf.io.FixedLenFeature([], tf.int64)
@@ -67,11 +67,14 @@ def decode_data(tokenizer, max_len_word, input_as_dict=False):
     data = tf.io.parse_single_example(example, feature_description)
 
     # Decode image.
-    data['image'] = tf.image.decode_image(data['image_raw'], dtype=tf.uint8)
+    data['image'] = tf.image.decode_png(data['image_raw'], dtype=tf.uint8)
     data['original_image'] = data['image']
 
     # Normalize
     data['image'] = tf.image.per_image_standardization(tf.cast(data['image'], 'float32'))
+
+    if image_size:
+      data['image'] = tf.image.resize(data['image'], image_size)
 
     # Remove unneeded image string.
     data.pop('image_raw')
@@ -81,6 +84,7 @@ def decode_data(tokenizer, max_len_word, input_as_dict=False):
 
     if input_as_dict:
       return data
+
     return data['image'], data['label']
 
   return _decode
