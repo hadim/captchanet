@@ -57,7 +57,7 @@ def encode_data(image, word, tokenizer, max_len_word):
   return tf.train.Example(features=tf.train.Features(feature=feature))
 
 
-def decode_data(tokenizer, max_len_word, image_size=None, input_as_dict=False, normalize=True):
+def decode_data(tokenizer, max_len_word, image_size=None, input_as_dict=False):
   def _decode(example):
     feature_description = {}
     feature_description['width'] = tf.io.FixedLenFeature([], tf.int64)
