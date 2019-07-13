@@ -44,9 +44,6 @@ def encode_data(image, word, tokenizer, max_len_word):
   token = tokenizer.texts_to_sequences([word])[0]
   assert len(token) == len(word)
   token = tf.pad(token, [[0, max_len_word - len(word)]])
-  print(token)
-  print(word)
-  print('=---------------')
 
   feature = {}
   feature['width'] = int64_feature(image.shape[0])
@@ -85,7 +82,7 @@ def decode_data(tokenizer, max_len_word, image_size=None, input_as_dict=False):
     data.pop('image_raw')
 
     # Embed th token.
-    vocabulary_size = len(tokenizer.index_word)
+    vocabulary_size = len(tokenizer.index_word) + 1
     data['label'] = tf.one_hot(data['token'], depth=vocabulary_size)
 
     if input_as_dict:
