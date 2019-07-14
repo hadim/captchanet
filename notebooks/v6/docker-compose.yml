@@ -1,0 +1,15 @@
+version: '3'
+services:
+
+  tf-serving:
+    container_name: tf-serving
+    image: tensorflow/serving:nightly
+    #runtime: nvidia
+    ports:
+      - "8500:8500"
+      - "8501:8501"
+    volumes:
+      - /home/hadim/Drive/Data/Neural_Network/captchanet/model/v6/inference_model:/models/captchanet/1
+    environment:
+      - MODEL_NAME=captchanet
+      - MODEL_BASE_PATH=/models
